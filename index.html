@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart Helmet — Demo</title>
+  <meta name="description" content="Smart Helmet demo website with live telemetry, safety features, and gesture controls (simulated)." />
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#00d4ff; --muted:#94a3b8; --glass: rgba(255,255,255,0.04);
+      --success:#10b981; --danger:#ef4444;
+      --radius:14px; --pad:18px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071126 0%,#0b1220 100%);color:#e6eef6}
+    .wrap{max-width:1100px;margin:28px auto;padding:22px}
+
+    header{display:flex;align-items:center;gap:18px;margin-bottom:20px}
+    .logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+    .logo b{font-size:20px}
+    h1{margin:0;font-size:22px}
+    p.lead{margin:0;color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    @media (max-width:920px){.grid{grid-template-columns:1fr}
+      .right{order:-1}
+    }
+
+    .card{background:var(--card);border-radius:var(--radius);padding:var(--pad);box-shadow: 0 8px 24px rgba(6,10,18,0.6)}
+
+    /* telemetry */
+    .telemetry{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .stat{background:var(--glass);padding:12px;border-radius:12px;text-align:center}
+    .stat h3{margin:0;font-size:18px}
+    .stat p{margin:6px 0 0;color:var(--muted)}
+
+    /* map / image */
+    .scene{height:320px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.2));display:flex;align-items:center;justify-content:center;color:var(--muted)}
+
+    .features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+    .feature{padding:12px;border-radius:10px;background:rgba(255,255,255,0.02)}
+    .feature h4{margin:0 0 6px}
+    .muted{color:var(--muted)}
+
+    /* right column */
+    .right .panel{margin-bottom:12px}
+    .battery{display:flex;align-items:center;gap:10px}
+    .batbar{height:12px;border-radius:6px;background:rgba(255,255,255,0.06);flex:1;overflow:hidden}
+    .batfill{height:100%;width:66%;background:linear-gradient(90deg,var(--success),#60a5fa)}
+
+    .controls{display:flex;gap:8px;margin-top:10px}
+    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:10px;color:inherit;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,var(--accent),#7c3aed);border:0}
+
+    .log{height:140px;overflow:auto;background:rgba(0,0,0,0.25);padding:10px;border-radius:10px;font-family:monospace;font-size:13px}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* small helpers */
+    .pill{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:13px}
+
+    /* nice animated radar */
+    .radar{position:relative;height:220px;border-radius:12px;background:radial-gradient(circle at 30% 30%, rgba(0,0,0,0.05), transparent 30%);display:flex;align-items:center;justify-content:center}
+    .sweep{position:absolute;width:220px;height:220px;border-radius:50%;background:conic-gradient(rgba(0,212,255,0.06), transparent 20%);animation:sweep 4s linear infinite}
+    @keyframes sweep{to{transform:rotate(360deg)}}
+
+    /* forms */
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo"><b>SH</b></div>
+      <div>
+        <h1>Smart Helmet <span class="pill">Demo</span></h1>
+        <p class="lead">A responsive demo site showing helmet telemetry, safety alerts, gesture control and power status (simulated).</p>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card left">
+        <div class="telemetry">
+          <div class="stat">
+            <h3 id="speed">0 km/h</h3>
+            <p class="muted">Speed</p>
+          </div>
+          <div class="stat">
+            <h3 id="impact">0 g</h3>
+            <p class="muted">Impact Force</p>
+          </div>
+          <div class="stat">
+            <h3 id="temp">-- °C</h3>
+            <p class="muted">Ambient Temp</p>
+          </div>
+        </div>
+
+        <div class="scene" style="margin-top:12px;">
+          <div style="text-align:center;max-width:560px">
+            <div class="radar">
+              <div class="sweep" aria-hidden="true"></div>
+              <div style="position:relative;z-index:2;text-align:center;color:var(--muted)">
+                <div style="font-weight:700;font-size:18px">Live Proximity</div>
+                <div style="margin-top:6px" class="muted">No obstacles within 2 m (simulated)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="features">
+          <div class="feature">
+            <h4>Crash Detection</h4>
+            <p class="muted">Tilt & impact sensors trigger an alert and send coordinates to emergency contacts.</p>
+          </div>
+          <div class="feature">
+            <h4>Gesture Control</h4>
+            <p class="muted">Use simple hand gestures to answer calls or toggle music (requires paired module).</p>
+          </div>
+          <div class="feature">
+            <h4>Built-in GPS</h4>
+            <p class="muted">Share real-time location after an impact or when rider presses SOS.</p>
+          </div>
+          <div class="feature">
+            <h4>Voice & Audio</h4>
+            <p class="muted">Bone-conduction speakers allow audio without blocking ambient sound.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <aside class="right">
+        <div class="card panel">
+          <h3 style="margin-top:0">Battery & Connectivity</h3>
+          <div class="battery" aria-hidden="false">
+            <div style="width:64px;text-align:center;font-weight:700" id="batPercent">66%</div>
+            <div class="batbar"><div class="batfill" id="batFill" style="width:66%"></div></div>
+          </div>
+          <div style="margin-top:8px" class="muted">Bluetooth: <span id="bt">Connected</span> · GPS: <span id="gps">Locked</span></div>
+
+          <div class="controls">
+            <button id="simulateImpact">Simulate Impact</button>
+            <button class="primary" id="sos">Send SOS</button>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <h4 style="margin:0 0 8px">Live Logs</h4>
+          <div class="log" id="logArea" role="log" aria-live="polite"></div>
+        </div>
+
+        <div class="card panel">
+          <h4 style="margin:0 0 10px">Settings</h4>
+          <label for="sensitivity">Impact Sensitivity</label>
+          <select id="sensitivity">
+            <option value="1">Low</option>
+            <option value="2" selected>Medium</option>
+            <option value="3">High</option>
+          </select>
+
+          <label for="emergency">Emergency Contact (phone/email)</label>
+          <input id="emergency" placeholder="+91 98765 43210" />
+
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button id="saveSettings">Save</button>
+            <button id="resetSettings">Reset</button>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <h4 style="margin:0 0 8px">Quick Actions</h4>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="toggleMusic">Play/Pause</button>
+            <button id="navHome">Navigate Home</button>
+            <button id="callContact">Call Contact</button>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <footer>
+      <div>Built as a demo — integrate with real sensors and a backend to enable live telemetry and emergency notifications.</div>
+    </footer>
+  </div>
+
+  <script>
+    // Simulated telemetry + simple UI logic
+    const speedEl = document.getElementById('speed');
+    const impactEl = document.getElementById('impact');
+    const tempEl = document.getElementById('temp');
+    const logArea = document.getElementById('logArea');
+    const batFill = document.getElementById('batFill');
+    const batPercent = document.getElementById('batPercent');
+    const bt = document.getElementById('bt');
+    const gps = document.getElementById('gps');
+
+    let battery = 66;
+    let speed = 0;
+    let impact = 0;
+
+    function appendLog(text){
+      const time = new Date().toLocaleTimeString();
+      logArea.innerHTML = `<div>[${time}] ${text}</div>` + logArea.innerHTML;
+    }
+
+    function updateUI(){
+      speedEl.textContent = Math.round(speed) + ' km/h';
+      impactEl.textContent = impact.toFixed(1) + ' g';
+      tempEl.textContent = (22 + Math.round(Math.sin(Date.now()/5000)*3)) + ' °C';
+      batFill.style.width = battery + '%';
+      batPercent.textContent = battery + '%';
+    }
+
+    // simulate movement and battery drain
+    setInterval(()=>{
+      // speed varies between 0-80
+      speed = Math.max(0, Math.min(120, speed + (Math.random()-0.5)*8));
+      // small random impacts
+      impact = Math.max(0, (Math.random()*0.7));
+      // drain battery slowly
+      battery = Math.max(5, battery - 0.02);
+      if (battery < 20) bt.textContent = 'Low';
+      updateUI();
+    }, 1200);
+
+    // Simulated bluetooth/gps states
+    setTimeout(()=>{appendLog('Bluetooth paired with phone');},1200);
+    setTimeout(()=>{appendLog('GPS lock acquired');},1600);
+
+    // simulate incoming events
+    document.getElementById('simulateImpact').addEventListener('click', ()=>{
+      impact = (Math.random()*6 + 3); // high g
+      appendLog('Impact detected! Impact = ' + impact.toFixed(1) + 'g');
+      // if impact exceeds threshold -> auto SOS
+      const sensitivity = Number(document.getElementById('sensitivity').value);
+      const threshold = sensitivity===1?8: (sensitivity===2?6:4);
+      if (impact >= threshold){
+        appendLog('Impact exceeded threshold -> sending emergency alert');
+        flashSOS();
+      } else appendLog('Impact below threshold.');
+      updateUI();
+    });
+
+    function flashSOS(){
+      const btn = document.getElementById('sos');
+      let on = true; let i=0;
+      appendLog('SENDING SOS to: ' + (document.getElementById('emergency').value || 'No contact set'));
+      const iv = setInterval(()=>{
+        btn.style.transform = on? 'scale(1.04)' : 'scale(1)';
+        on = !on; if (++i>8) {clearInterval(iv); btn.style.transform='';}
+      },250);
+    }
+
+    document.getElementById('sos').addEventListener('click', ()=>{
+      appendLog('Manual SOS triggered');
+      flashSOS();
+    });
+
+    document.getElementById('saveSettings').addEventListener('click', ()=>{
+      appendLog('Settings saved');
+    });
+    document.getElementById('resetSettings').addEventListener('click', ()=>{
+      document.getElementById('emergency').value='';
+      document.getElementById('sensitivity').value='2';
+      appendLog('Settings reset');
+    });
+
+    document.getElementById('toggleMusic').addEventListener('click', ()=>appendLog('Play/Pause toggled'));
+    document.getElementById('navHome').addEventListener('click', ()=>appendLog('Navigation: Home started'));
+    document.getElementById('callContact').addEventListener('click', ()=>appendLog('Calling emergency contact...'));
+
+    // small accessibility: focus first button after load
+    window.addEventListener('load', ()=>{document.getElementById('simulateImpact').focus(); updateUI();});
+  </script>
+</body>
+</html>
